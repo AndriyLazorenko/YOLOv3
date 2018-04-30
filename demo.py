@@ -98,6 +98,27 @@ def detect_image(image, yolo, all_classes):
     return image
 
 
+def detect_objects_live(yolo=YOLO(0.6, 0.5),
+                        all_classes=get_classes('data/coco_classes.txt')):
+    cv2.namedWindow('window_frame')
+    cap = cv2.VideoCapture(0)  # Webcam sourceK
+    while cap.isOpened():
+        bgr_image, gray_image, rgb_image = get_images_from_webcam(cap)
+        im = detect_image(bgr_image, yolo, all_classes)
+        cv2.imshow("detection", im)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+def get_images_from_webcam(cap):
+    ret, bgr_image = cap.read()
+    gray_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
+    rgb_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
+    return bgr_image, gray_image, rgb_image
+
+
 def detect_vedio(video, yolo, all_classes):
     """Use yolo v3 to detect video.
 
@@ -119,28 +140,31 @@ def detect_vedio(video, yolo, all_classes):
         cv2.imshow("detection", image)
 
         if cv2.waitKey(110) & 0xff == 27:
-                break
+            break
 
     camera.release()
 
+    def pictures_test():
+        yolo = YOLO(0.6, 0.5)
+        file = 'data/coco_classes.txt'
+        all_classes = get_classes(file)
+
+        # detect images in test floder.
+        for (root, dirs, files) in os.walk('images/test'):
+            if files:
+                for f in files:
+                    print(f)
+                    path = os.path.join(root, f)
+                    image = cv2.imread(path)
+                    image = detect_image(image, yolo, all_classes)
+                    cv2.imwrite('images/res/' + f, image)
+
+        # detect vedio.
+        """
+        video = 'E:/video/car.flv'
+        detect_vedio(video, yolo, all_classes)
+        """
+
 
 if __name__ == '__main__':
-    yolo = YOLO(0.6, 0.5)
-    file = 'data/coco_classes.txt'
-    all_classes = get_classes(file)
-
-    # detect images in test floder.
-    for (root, dirs, files) in os.walk('images/test'):
-        if files:
-            for f in files:
-                print(f)
-                path = os.path.join(root, f)
-                image = cv2.imread(path)
-                image = detect_image(image, yolo, all_classes)
-                cv2.imwrite('images/res/' + f, image)
-
-    # detect vedio.
-    """
-    video = 'E:/video/car.flv'
-    detect_vedio(video, yolo, all_classes)
-    """
+    detect_objects_live()
